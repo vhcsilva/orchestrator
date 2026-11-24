@@ -3,36 +3,78 @@
 const fs = require('fs')
 const path = require('path')
 const args = process.argv.slice(2)
-if (args.includes('--version')) { console.log('9.9.9 (fake claude)'); process.exit(0) }
-if (args[0] === 'mcp') { console.log('atlassian: connected\nfigma: connected'); process.exit(0) }
+if (args.includes('--version')) {
+  console.log('9.9.9 (fake claude)')
+  process.exit(0)
+}
+if (args[0] === 'mcp') {
+  console.log('atlassian: connected\nfigma: connected')
+  process.exit(0)
+}
 const prompt = fs.readFileSync(0, 'utf8')
-const arg = (name) => { const i = args.indexOf(name); return i >= 0 ? args[i + 1] : undefined }
+const arg = (name) => {
+  const i = args.indexOf(name)
+  return i >= 0 ? args[i + 1] : undefined
+}
 const session = arg('--resume') || arg('--session-id') || 'fake-session'
 const out = (o) => process.stdout.write(JSON.stringify(o) + '\n')
 fs.appendFileSync(process.env.FAKE_LOG, JSON.stringify({ args, cwd: process.cwd(), head: prompt.slice(0, 80) }) + '\n')
 out({ type: 'system', subtype: 'init', session_id: session, model: 'fake', mcp_servers: [{ name: 'atlassian', status: 'connected' }] })
 const ctx = path.join(process.cwd(), 'contexto')
-const write = (f, c) => { fs.mkdirSync(path.dirname(f), { recursive: true }); fs.writeFileSync(f, c) }
-const story = (changed) => `# CHK-9 — Cupom\n\n## Descrição\nCupom por categoria.\n\n## Critérios de aceite\n- ${changed ? 'Aplica a até 3 categorias.' : 'Aplica a uma categoria.'}\n`
+const write = (f, c) => {
+  fs.mkdirSync(path.dirname(f), { recursive: true })
+  fs.writeFileSync(f, c)
+}
+const story = (changed) =>
+  `# CHK-9 — Cupom\n\n## Descrição\nCupom por categoria.\n\n## Critérios de aceite\n- ${changed ? 'Aplica a até 3 categorias.' : 'Aplica a uma categoria.'}\n`
 let result = 'ok'
 if (prompt.includes('cadastrar uma feature')) {
-  result = 'Resultado:\n' + JSON.stringify({ key: 'CHK-9', title: 'Cupom por categoria', status: 'To Do', linked: [{ key: 'CHK-10', title: 'Design: cupom', relation: 'relates to', isDesign: true, attachments: ['proto.html'], figma: [] }] })
+  result =
+    'Resultado:\n' +
+    JSON.stringify({
+      key: 'CHK-9',
+      title: 'Cupom por categoria',
+      status: 'To Do',
+      linked: [{ key: 'CHK-10', title: 'Design: cupom', relation: 'relates to', isDesign: true, attachments: ['proto.html'], figma: [] }]
+    })
 } else if (prompt.includes('Refinamento de negócio')) {
   write(path.join(ctx, 'historia.md'), story(false))
   const reanalysis = prompt.includes('Esta é uma reanálise')
-  write(path.join(ctx, '01-refinamento-negocio.json'), JSON.stringify({
-    summary: reanalysis ? 'reanalisado' : 'primeira análise',
-    sources: [{ kind: 'jira', ref: 'CHK-9', label: 'história' }],
-    points: [
-      { id: 'D1', kind: 'divergencia', severity: 'alta', blocksDev: !reanalysis, title: 'Limite de categorias', story: '1', design: '3' },
-      { id: 'Q1', kind: 'duvida', severity: 'media', blocksDev: false, title: 'Acumula com promoção?' }
-    ].concat(reanalysis && prompt.includes('"id": "Q9"') ? [{ id: 'Q9', kind: 'duvida', title: 'manual', manual: true }] : [])
-  }))
+  write(
+    path.join(ctx, '01-refinamento-negocio.json'),
+    JSON.stringify({
+      summary: reanalysis ? 'reanalisado' : 'primeira análise',
+      sources: [{ kind: 'jira', ref: 'CHK-9', label: 'história' }],
+      points: [
+        { id: 'D1', kind: 'divergencia', severity: 'alta', blocksDev: !reanalysis, title: 'Limite de categorias', story: '1', design: '3' },
+        { id: 'Q1', kind: 'duvida', severity: 'media', blocksDev: false, title: 'Acumula com promoção?' }
+      ].concat(reanalysis && prompt.includes('"id": "Q9"') ? [{ id: 'Q9', kind: 'duvida', title: 'manual', manual: true }] : [])
+    })
+  )
   write(path.join(ctx, '01-refinamento-negocio.md'), '# Relatório\n')
 } else if (prompt.includes('respondeu às suas perguntas')) {
-  write(path.join(ctx, '02-refinamento-tecnico.json'), JSON.stringify({ summary: 'ok', dependencies: [{ need: 'preço', origin: 'pricing-api', owner: '@pricing', confidence: 'alta' }], questions: [], subtasks: [{ id: 'S1', title: '[API] x', description: 'y' }, { id: 'S2', title: '[Web] z', description: 'w' }] }))
+  write(
+    path.join(ctx, '02-refinamento-tecnico.json'),
+    JSON.stringify({
+      summary: 'ok',
+      dependencies: [{ need: 'preço', origin: 'pricing-api', owner: '@pricing', confidence: 'alta' }],
+      questions: [],
+      subtasks: [
+        { id: 'S1', title: '[API] x', description: 'y' },
+        { id: 'S2', title: '[Web] z', description: 'w' }
+      ]
+    })
+  )
 } else if (prompt.includes('Refinamento técnico')) {
-  write(path.join(ctx, '02-refinamento-tecnico.json'), JSON.stringify({ summary: 'ok', dependencies: [], questions: [{ id: 'P1', question: 'De onde vem o preço?', blocking: true }], subtasks: [{ id: 'S1', title: '[API] x', description: 'y', blockedBy: 'P1' }] }))
+  write(
+    path.join(ctx, '02-refinamento-tecnico.json'),
+    JSON.stringify({
+      summary: 'ok',
+      dependencies: [],
+      questions: [{ id: 'P1', question: 'De onde vem o preço?', blocking: true }],
+      subtasks: [{ id: 'S1', title: '[API] x', description: 'y', blockedBy: 'P1' }]
+    })
+  )
   write(path.join(ctx, '02-refinamento-tecnico.md'), '# Técnico\n')
 } else if (prompt.includes('Crie subtasks no Jira')) {
   const ids = [...prompt.matchAll(/^### (S\d+)/gm)].map((m) => m[1])
@@ -42,5 +84,13 @@ if (prompt.includes('cadastrar uma feature')) {
 } else if (prompt.includes('onde-parei.md')) {
   write(path.join(ctx, 'onde-parei.md'), 'Tudo certo.\n')
 }
-out({ type: 'assistant', message: { content: [{ type: 'tool_use', name: 'Write', input: { file_path: 'x' } }, { type: 'text', text: 'feito' }] } })
+out({
+  type: 'assistant',
+  message: {
+    content: [
+      { type: 'tool_use', name: 'Write', input: { file_path: 'x' } },
+      { type: 'text', text: 'feito' }
+    ]
+  }
+})
 out({ type: 'result', subtype: 'success', is_error: false, result, session_id: session, total_cost_usd: 0.01, duration_ms: 5 })

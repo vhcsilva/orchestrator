@@ -9,6 +9,12 @@ export const DEFAULT_SHELL_INIT = [
   'true'
 ].join('\n')
 
+/** Abre a pasta da feature no Kiro conectado ao WSL pela extensão de WSL (mesma sintaxe do VS Code). */
+export const KIRO_WSL_COMMAND = 'kiro --new-window --remote wsl+{distro} "{workspace}"'
+export const KIRO_LOCAL_COMMAND = 'kiro --new-window "{workspace}"'
+/** Padrão das versões anteriores (abria pelo caminho \\wsl.localhost, sem a extensão). */
+const LEGACY_UNC_COMMAND = 'kiro --new-window "{workspaceHost}"'
+
 export function defaultConfig(platform: NodeJS.Platform = process.platform): AppConfig {
   return {
     wsl: { enabled: platform === 'win32', distro: '', shellInit: DEFAULT_SHELL_INIT },
@@ -55,7 +61,7 @@ export function defaultConfig(platform: NodeJS.Platform = process.platform): App
       slugMaxLength: 40
     },
     ide: {
-      openCommand: 'kiro --new-window "{workspaceHost}"',
+      openCommand: platform === 'win32' ? KIRO_WSL_COMMAND : KIRO_LOCAL_COMMAND,
       runIn: 'host',
       generateSteering: true
     },
@@ -67,6 +73,14 @@ export function defaultConfig(platform: NodeJS.Platform = process.platform): App
       autoOndeParei: true
     }
   }
+}
+
+/** Ajusta configurações salvas por versões anteriores. */
+export function migrateConfig(cfg: AppConfig): AppConfig {
+  if (cfg.ide.openCommand.trim() === LEGACY_UNC_COMMAND) {
+    cfg.ide.openCommand = cfg.wsl.enabled ? KIRO_WSL_COMMAND : KIRO_LOCAL_COMMAND
+  }
+  return cfg
 }
 
 /** Mescla recursivamente a configuração salva sobre os padrões (campos novos ganham padrão). */
@@ -96,7 +110,7 @@ export class ConfigStore {
   async load(): Promise<AppConfig> {
     try {
       const raw = JSON.parse(await fs.readFile(this.file, 'utf8'))
-      this.current = mergeConfig(defaultConfig(), raw)
+      this.current = migrateConfig(mergeConfig(defaultConfig(), raw))
     } catch {
       await this.save(this.current)
     }

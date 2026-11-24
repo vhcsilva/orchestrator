@@ -19,7 +19,7 @@ Windows                                   WSL (Ubuntu)
 │ Orquestrador (Electron)      │ wsl.exe  │ claude -p --output-format stream-json …   │
 │  ├ interface React           │ ───────► │ kiro-cli chat --no-interactive …          │
 │  ├ estado em ~/.orquestrador │  stdin   │ git worktree …                            │
-│  └ abre o Kiro IDE (host)    │          │ ~/features/CHK-123/                       │
+│  └ abre o Kiro via WSL remote│          │ ~/features/CHK-123/                       │
 └──────────────────────────────┘          │   ├ CHK-123.code-workspace                │
                                           │   ├ .kiro/steering/feature-context.md     │
                                           │   ├ .kiro/specs/chk-123-…/                │
@@ -38,8 +38,9 @@ Windows                                   WSL (Ubuntu)
 ## Requisitos
 
 No **Windows**:
-- Node.js 22+ (para rodar/compilar o app)
 - Kiro IDE instalado, com o comando `kiro` no PATH
+- no Kiro, a extensão de WSL (**Open Remote - WSL**, do Open VSX), para abrir as pastas do WSL conectado ao Linux — terminais, git e extensões rodam no WSL, como no VS Code
+- Node.js 22+ apenas se for rodar/compilar o app a partir do código
 
 No **WSL** (distribuição padrão ou a que você escolher):
 - `git`
@@ -48,6 +49,12 @@ No **WSL** (distribuição padrão ou a que você escolher):
 - os clones dos repositórios que você usa
 
 ## Instalação
+
+Baixe o instalador (`Orquestrador-Setup-x.y.z.exe`) ou a versão portátil na página de [releases](https://github.com/vhcsilva/orchestrator/releases). Cada push no `main` também gera os dois arquivos como artefato da action **Instalador Windows** (aba Actions › execução › *orquestrador-windows*).
+
+Para gerar uma release: crie e envie uma tag `vX.Y.Z` (`git tag v0.2.0 && git push origin v0.2.0`); a action compila, empacota e publica os `.exe` na release.
+
+A partir do código:
 
 ```powershell
 git clone https://github.com/vhcsilva/orchestrator.git
@@ -64,7 +71,7 @@ npm run dist:win     # gera o instalador e a versão portátil em dist/
 2. **Permissões do Claude Code** → a lista de ferramentas liberadas precisa ter os MCPs com o **nome que aparece em `claude mcp list`** (padrão: `mcp__atlassian` e `mcp__figma`).
 3. **Repositórios** → cadastre cada clone (caminho no WSL, ex.: `~/repos/checkout-web`), a branch base e o escopo padrão de commit.
 4. **Branches e commits** → padrão de branch (`{tipo}/{escopo}/{chave}-{slug}`) e de commit (`{tipo}({escopo}): {descricao} [{chave}]`).
-5. **Kiro IDE** → comando para abrir a janela da feature. Padrão: `kiro --new-window "{workspaceHost}"` (o `{workspaceHost}` vira `\\wsl.localhost\Ubuntu\home\…\CHK-123.code-workspace`). Se o seu Kiro abre pastas do WSL de outra forma, troque o comando — ex.: executar dentro do WSL (`runIn: wsl`) com `kiro "{workspace}"`.
+5. **Kiro IDE** → comando para abrir a janela da feature. Padrão no Windows: `kiro --new-window --remote wsl+{distro} "{workspace}"` — a janela abre pela extensão de WSL, com o workspace da feature no caminho Linux (ex.: `/home/voce/features/CHK-123/CHK-123.code-workspace`).
 
 A configuração fica em `%USERPROFILE%\.orquestrador\config.json`; o estado das features em `features\*.json` e os logs das execuções em `jobs\`.
 
@@ -105,6 +112,9 @@ tests/               vitest + CLIs falsos
 
 ## Pontos a validar no seu ambiente
 
-- **Abrir o Kiro em pastas do WSL**: o comando padrão usa o caminho `\\wsl.localhost\…`. Se o seu Kiro tiver suporte a WSL remoto, prefira o modo dele (ajuste em Configurações › Kiro IDE).
+- **Extensão de WSL no Kiro**: se a janela não conectar ao WSL, confira se a extensão Open Remote - WSL está instalada e habilitada. Alguns relatos indicam que ela precisa constar em `enable-proposed-api` no arquivo `%USERPROFILE%\.kiro\argv.json`:
+  ```json
+  { "enable-proposed-api": ["jeanp413.open-remote-wsl"] }
+  ```
 - **Anexos `.html` da história de design**: o prompt pede ao Claude Code que baixe os anexos para `contexto/design/`. Isso depende de o MCP do Atlassian da sua empresa expor anexos; se não expuser, o relatório lista a fonte como não lida e você pode salvar o arquivo manualmente nessa pasta antes de reanalisar.
 - **Permissões do kiro-cli**: por padrão a spec e as tasks rodam com `--trust-all-tools`. Para restringir, desligue a opção e informe `--trust-tools`.

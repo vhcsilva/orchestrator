@@ -14,6 +14,9 @@ export const SETTINGS_SECTIONS = [
   { id: 'execucao', label: 'Execução' }
 ]
 
+const KIRO_WSL = 'kiro --new-window --remote wsl+{distro} "{workspace}"'
+const KIRO_LOCAL = 'kiro --new-window "{workspace}"'
+
 const AGENTS: { key: keyof StagePromptOverrides; label: string; engine: string }[] = [
   { key: 'buscarHistoria', label: 'Buscar história (nova feature)', engine: 'claude' },
   { key: 'negocio', label: 'Refinamento de negócio', engine: 'claude' },
@@ -487,14 +490,28 @@ export function Settings(): React.JSX.Element {
 
           <section id="cfg-kiro" className="pn">
             <div className="ph">Kiro IDE</div>
-            <Field label="Comando para abrir" hint="{workspaceHost} {workspace} {dirHost} {dir} {distro}">
-              <input
-                className="in"
-                style={{ width: 420 }}
-                value={draft.ide.openCommand}
-                onChange={(e) => set('ide', { openCommand: e.target.value })}
-                aria-label="Comando do Kiro"
-              />
+            <Field label="Comando para abrir" hint="{workspace} {dir} {distro} {workspaceHost} {dirHost}">
+              <div className="stack" style={{ width: '100%' }}>
+                <input
+                  className="in"
+                  style={{ width: '100%' }}
+                  value={draft.ide.openCommand}
+                  onChange={(e) => set('ide', { openCommand: e.target.value })}
+                  aria-label="Comando do Kiro"
+                />
+                <div className="hstack">
+                  <button className="btn" onClick={() => set('ide', { openCommand: KIRO_WSL, runIn: 'host' })}>
+                    Usar extensão de WSL
+                  </button>
+                  <button className="btn" onClick={() => set('ide', { openCommand: KIRO_LOCAL, runIn: 'host' })}>
+                    Usar pasta local
+                  </button>
+                </div>
+                <span className="mu small">
+                  Com a extensão de WSL no Kiro, a janela abre conectada ao WSL (<span className="m">--remote wsl+{'{distro}'}</span>):
+                  terminais, git e extensões rodam no Linux, como no VS Code.
+                </span>
+              </div>
             </Field>
             <Field label="Executar o comando">
               <select
@@ -506,9 +523,7 @@ export function Settings(): React.JSX.Element {
                 <option value="host">no Windows (host)</option>
                 <option value="wsl">dentro do WSL</option>
               </select>
-              <span className="mu small">
-                No host, <span className="m">{'{workspaceHost}'}</span> vira <span className="m">\\wsl.localhost\…</span>
-              </span>
+              <span className="mu small">no Windows é o recomendado</span>
             </Field>
             <Field label="Steering da feature">
               <label className="check">
