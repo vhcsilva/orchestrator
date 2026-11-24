@@ -1,0 +1,17 @@
+appId: dev.vhcsilva.orquestrador
+productName: Orquestrador
+directories:
+  buildResources: resources
+files:
+  - out/**
+  - package.json
+win:
+  target:
+    - nsis
+    - portable
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+linux:
+  target:
+    - AppImage

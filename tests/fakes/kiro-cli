@@ -1,0 +1,32 @@
+#!/usr/bin/env node
+// kiro-cli falso: cria a spec e "implementa" tarefas marcando-as no tasks.md e commitando.
+const fs = require('fs')
+const path = require('path')
+const { execSync } = require('child_process')
+const args = process.argv.slice(2)
+if (args.includes('--version')) { console.log('kiro-cli 9.9.9 (fake)'); process.exit(0) }
+const prompt = fs.readFileSync(0, 'utf8')
+fs.appendFileSync(process.env.FAKE_LOG, JSON.stringify({ kiro: true, args, cwd: process.cwd(), head: prompt.slice(0, 80) }) + '\n')
+const spec = /\.kiro\/specs\/([^/`\s]+)\//.exec(prompt)[1]
+const dir = path.join(process.cwd(), '.kiro', 'specs', spec)
+const tasksFile = path.join(dir, 'tasks.md')
+if (prompt.includes('Crie a spec do Kiro')) {
+  fs.mkdirSync(dir, { recursive: true })
+  fs.writeFileSync(path.join(dir, 'requirements.md'), '# Requisitos\n')
+  fs.writeFileSync(path.join(dir, 'design.md'), '# Design\n')
+  fs.writeFileSync(tasksFile, '# Tarefas\n\n- [ ] 1. [repo-a] Primeira\n  - [ ] 1.1 Sub\n  - _Requisitos: 1.1_\n- [ ] 2. [repo-a] Segunda\n')
+  console.log('\x1b[32mspec criada\x1b[0m')
+} else if (prompt.includes('mudou no Jira')) {
+  fs.appendFileSync(path.join(dir, 'requirements.md'), '\n(atualizado)\n')
+  console.log('spec atualizada')
+} else {
+  const m = /Implemente a tarefa (\d+)/.exec(prompt)
+  const id = m[1]
+  if (process.env.FAKE_KIRO_SKIP_MARK === id) { console.log('esqueci de marcar'); process.exit(0) }
+  const md = fs.readFileSync(tasksFile, 'utf8').split('\n').map((l) => (new RegExp(`^(\\s*)- \\[ \\] ${id}(\\.|\\.\\d+)`).test(l) ? l.replace('[ ]', '[x]') : l)).join('\n')
+  fs.writeFileSync(tasksFile, md)
+  const repo = path.join(process.cwd(), 'repo-a')
+  fs.writeFileSync(path.join(repo, `task-${id}.txt`), id)
+  execSync(`git add -A && git commit -q -m "feat(a): task ${id} [CHK-9]"`, { cwd: repo })
+  console.log(`task ${id} ok`)
+}
