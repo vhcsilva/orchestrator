@@ -28,9 +28,19 @@ Outros repositórios conhecidos (consulte código e CODEOWNERS se ajudar):
 ```json
 {
   "summary": "visão técnica em 2 a 4 frases",
-  "dependencies": [{ "need": "dado ou necessidade", "origin": "serviço provável", "owner": "@time (CODEOWNERS) ou vazio", "confidence": "alta|media|baixa", "notes": "evidência" }],
+  "dependencies": [
+    {
+      "need": "dado ou necessidade",
+      "origin": "serviço provável",
+      "owner": "@time (CODEOWNERS) ou vazio",
+      "confidence": "alta|media|baixa",
+      "notes": "evidência"
+    }
+  ],
   "questions": [{ "id": "P1", "question": "pergunta objetiva", "context": "o que você já verificou", "blocking": true }],
-  "subtasks": [{ "id": "S1", "title": "[BFF] …", "description": "o que fazer e critério de pronto", "repo": "nome-do-repo", "blockedBy": "P1" }]
+  "subtasks": [
+    { "id": "S1", "title": "[BFF] …", "description": "o que fazer e critério de pronto", "repo": "nome-do-repo", "blockedBy": "P1" }
+  ]
 }
 ```
 

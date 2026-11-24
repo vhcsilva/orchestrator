@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { branchName, commitMessage, isValidBranch, slugify } from '@shared/branches'
 import { traceability } from '@shared/trace'
-import { defaultConfig, mergeConfig } from '../src/main/core/config'
+import { defaultConfig, mergeConfig, migrateConfig } from '../src/main/core/config'
+import { buildOpenCommand } from '../src/main/orchestrator'
 import { compactDiff, diffLines, hasChanges } from '../src/main/core/diff'
 import { extractJson } from '../src/main/core/json'
 import { normalizeBusinessReport, normalizeTechReport } from '../src/main/core/normalize'
@@ -131,6 +132,33 @@ describe('config', () => {
     expect(merged.claude.command).toBe('claude')
     expect(merged.repos).toEqual([{ name: 'a' }])
     expect(merged.wsl.enabled).toBe(true) // tipo inválido mantém o padrão
+  })
+})
+
+describe('abrir no Kiro', () => {
+  const vars = {
+    workspace: '/home/u/features/CHK-1/CHK-1.code-workspace',
+    workspaceHost: 'x',
+    dir: '/home/u/features/CHK-1',
+    dirHost: 'y',
+    distro: 'Ubuntu'
+  }
+  it('no Windows usa a extensão de WSL (--remote wsl+distro)', () => {
+    expect(buildOpenCommand(defaultConfig('win32').ide.openCommand, vars)).toBe(
+      'kiro --new-window --remote wsl+Ubuntu "/home/u/features/CHK-1/CHK-1.code-workspace"'
+    )
+    expect(buildOpenCommand(defaultConfig('linux').ide.openCommand, vars)).toBe(
+      'kiro --new-window "/home/u/features/CHK-1/CHK-1.code-workspace"'
+    )
+  })
+  it('exige a distribuição quando o comando usa {distro}', () => {
+    expect(() => buildOpenCommand('kiro --remote wsl+{distro} "{workspace}"', { ...vars, distro: '' })).toThrow('Distribuição WSL')
+  })
+  it('migra o comando antigo (\\\\wsl.localhost) para a extensão de WSL', () => {
+    const old = mergeConfig(defaultConfig('win32'), { ide: { openCommand: 'kiro --new-window "{workspaceHost}"' } })
+    expect(migrateConfig(old).ide.openCommand).toBe('kiro --new-window --remote wsl+{distro} "{workspace}"')
+    const custom = mergeConfig(defaultConfig('win32'), { ide: { openCommand: 'meu-comando' } })
+    expect(migrateConfig(custom).ide.openCommand).toBe('meu-comando')
   })
 })
 

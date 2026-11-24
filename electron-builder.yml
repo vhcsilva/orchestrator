@@ -2,16 +2,27 @@ appId: dev.vhcsilva.orquestrador
 productName: Orquestrador
 directories:
   buildResources: resources
+  output: dist
 files:
   - out/**
+  - '!out/e2e-shots/**'
   - package.json
+npmRebuild: false
+publish: null
 win:
   target:
-    - nsis
-    - portable
+    - target: nsis
+      arch: [x64]
+    - target: portable
+      arch: [x64]
 nsis:
   oneClick: false
+  perMachine: false
   allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  artifactName: Orquestrador-Setup-${version}.${ext}
+portable:
+  artifactName: Orquestrador-${version}-portatil.${ext}
 linux:
   target:
     - AppImage

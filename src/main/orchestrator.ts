@@ -32,6 +32,14 @@ type StepName = 'negocio' | 'tecnico' | 'spec' | 'dev' | 'subtasks' | 'historia'
 
 const KEY_RE = /^[A-Z][A-Z0-9_]+-\d+$/
 
+/** Monta o comando que abre o Kiro. Placeholders: {workspace} {workspaceHost} {dir} {dirHost} {distro}. */
+export function buildOpenCommand(template: string, vars: Record<string, string>): string {
+  if (template.includes('{distro}') && !vars.distro) {
+    throw new Error('Distribuição WSL desconhecida: informe-a em Configurações › Integrações e teste o ambiente')
+  }
+  return template.replace(/\{(workspace|workspaceHost|dir|dirHost|distro)\}/g, (_, k: string) => vars[k] ?? '')
+}
+
 export class Orchestrator {
   private busy = new Set<string>()
   private timer?: NodeJS.Timeout
@@ -745,7 +753,7 @@ export class Orchestrator {
       dirHost: this.d.exec.host(f.dir),
       distro: this.d.exec.env.distro
     }
-    const cmd = this.cfg.ide.openCommand.replace(/\{(workspace|workspaceHost|dir|dirHost|distro)\}/g, (_, k: string) => vars[k])
+    const cmd = buildOpenCommand(this.cfg.ide.openCommand, vars)
     if (this.cfg.ide.runIn === 'wsl') {
       const r = await this.d.exec.runScript(`${cmd} >/dev/null 2>&1 &\ndisown 2>/dev/null; true`, 30_000)
       if (r.code !== 0) throw new Error(r.stderr || `falhou: ${cmd}`)

@@ -4,6 +4,7 @@ Você está na pasta da feature `{{featureDir}}`. Os repositórios (worktrees) s
 {{repoList}}
 
 Leia antes de escrever:
+
 - `{{contextDir}}/historia.md` (história do Jira)
 - `{{contextDir}}/01-refinamento-negocio.md` (divergências, dúvidas e DECISÕES — as decisões prevalecem sobre a história e o protótipo)
 - `{{contextDir}}/02-refinamento-tecnico.md` (dependências e subtasks)
