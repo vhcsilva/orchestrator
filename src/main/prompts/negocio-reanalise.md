@@ -23,7 +23,6 @@ Notas da conversa:
 ```
 
 Regras da reanálise:
-
 - Mantenha os mesmos ids para os mesmos pontos. Novos pontos continuam a numeração.
 - Inclua os pontos manuais no resultado (com os mesmos ids).
 - Um ponto respondido continua na lista; ajuste `blocksDev` para false se a resposta resolve o bloqueio, e registre a decisão em `context`.
